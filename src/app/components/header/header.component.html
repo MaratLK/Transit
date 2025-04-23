@@ -1,0 +1,28 @@
+<header class="fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] h-[85px] flex items-center justify-between px-6 rounded-[30px] z-50"
+        style="background: linear-gradient(115deg, #ffffff 30%, #1a2b4c 30%);">
+  
+  <!-- Логотип -->
+  <div class="logo">
+    <a href="#slides">
+      <img src="/assets/img_prj/RealLogo.png" alt="Логотип ПЛК Транзит"
+           class="h-20 w-auto cursor-pointer">
+    </a>
+  </div>
+  
+
+  <!-- Навигация -->
+  <nav>
+    <ul class="flex space-x-6 text-white font-exo">
+      <li><a href="#services" class="p-3 rounded-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-20">Услуги</a></li>
+      <li><a href="#about" class="p-3 rounded-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-20">О нас</a></li>
+      <li><a href="#news" class="p-3 rounded-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-20">Новости</a></li>
+      <li><a href="#contacts" class="p-3 rounded-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-20">Контакты</a></li>
+      <li>
+        <a (click)="navigateToAuth()" class="p-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 hover:bg-white hover:bg-opacity-20">
+          <i class="fas fa-user"></i> {{ isLoggedIn ? userName : 'Войти' }}
+        </a>
+      </li>      
+    </ul>
+  </nav>
+
+</header>

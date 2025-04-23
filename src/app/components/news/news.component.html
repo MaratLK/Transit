@@ -1,0 +1,165 @@
+<section id="news" class="p-10 about-section transition-colors duration-300">
+  <div class="max-w-5xl mx-auto">
+    <!-- Заголовок -->
+    <h2 class="text-4xl font-extrabold text-center text-[#1a2b4c] ">
+      Новости
+    </h2>
+    <p class="text-center text-gray-600 dark:text-gray-400 mt-2">
+      Лента событий
+    </p>
+
+    <!-- ✅ Кнопка "Добавить новость" (только для админа) -->
+    <div class="flex justify-end mt-6" *ngIf="isAdmin">
+      <button (click)="openModal()" 
+              class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2.5 rounded-lg shadow-md transition flex items-center gap-2 dark:bg-yellow-400 dark:hover:bg-yellow-500">
+        <i class="fas fa-plus"></i> Добавить новость
+      </button>      
+    </div>
+
+    <!-- Контейнер новостей -->
+    <div *ngIf="newsList.length > 0; else noNews" class="relative mt-10">
+
+      <div class="flex flex-wrap justify-center gap-6 relative"
+           (mouseleave)="hideFloatingLine()"> 
+
+        <div *ngFor="let item of newsList; let i = index" 
+             class="news-card cursor-pointer bg-white border z-10 border-[#D1D5DB] text-gray-900 rounded-xl shadow-md p-6 w-full sm:w-[320px] min-h-[140px] flex flex-col relative transition-all duration-300 hover:shadow-xl hover:border-[#B0B3B8]"
+             (click)="goToNewsPage(item.newsID)"
+             (mouseover)="moveFloatingLine($event, i)"> 
+
+          <!-- Контент новости -->
+          <div class="flex-1 text-left">
+            <h3 class="text-lg font-semibold truncate text-[#1A2B4C]">
+              {{ item.title }}
+            </h3>
+            <p class="text-sm mt-2 text-gray-600">
+              {{ item.content }}
+            </p>
+            <p class="text-sm mt-2 text-gray-500">
+              {{ item.datePublished }}
+            </p>
+          </div>
+
+          <!-- ✅ Кнопки редактирования/удаления (только для админа) -->
+          <div class="flex justify-end gap-3 mt-4" *ngIf="isAdmin">
+            <button (click)="openEditModal(item); $event.stopPropagation()"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-800 p-2 rounded-md transition flex items-center justify-center w-10 h-10 shadow-sm border border-gray-300"
+                    aria-label="Редактировать новость">
+              <i class="fas fa-pen text-md"></i>
+            </button>
+
+            <button (click)="deleteNews(item.newsID); $event.stopPropagation()"
+                    class="bg-[#DC2626] hover:bg-[#B91C1C] text-white p-2 rounded-md transition flex items-center justify-center w-10 h-10 shadow-md">
+              <i class="fas fa-trash text-md"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Плавающая линия -->
+      <div class="absolute h-1 floating-line transition-all duration-300 ease-in-out rounded-full mt-2 bg-gradient-to-r from-[#1a2b4c] to-[#264882]"
+           [ngStyle]="floatingLineStyle">
+      </div>
+    </div>
+
+    <!-- Если новостей нет -->
+    <ng-template #noNews>
+      <div class="text-center text-gray-500 dark:text-gray-400 mt-10 text-lg">
+        Новостей пока нет.
+      </div>
+    </ng-template>
+  </div>
+</section>
+
+
+<!-- ✅ Модальное окно для редактирования новости -->
+<div *ngIf="isEditModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+    <h2 class="text-lg font-bold mb-4">Редактировать новость</h2>
+
+    <!-- Поле заголовка -->
+    <input type="text" class="w-full border p-2 mb-4" [(ngModel)]="editingNews.title" placeholder="Заголовок">
+
+    <!-- Поле текста -->
+    <textarea class="w-full border p-2 mb-4" [(ngModel)]="editingNews.content" placeholder="Текст новости" rows="4"></textarea>
+
+    <!-- ✅ Старые изображения -->
+    <div *ngIf="editingNewsImages.length > 0" class="mb-4">
+      <h3 class="text-md font-semibold mb-2">Текущие изображения:</h3>
+      <div class="flex flex-wrap gap-2">
+        <div *ngFor="let image of editingNewsImages; let i = index" class="relative">
+          <img [src]="image.imageUrl" class="w-20 h-20 object-cover rounded">
+          <button (click)="removeExistingImage(i)" class="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1">
+            ✖
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ Загрузка новых изображений -->
+    <input type="file" (change)="onNewImageSelected($event)" accept="image/*" class="w-full border p-2 mb-4">
+
+    <!-- ✅ Новые изображения -->
+    <div *ngIf="selectedNewImages.length > 0" class="mb-4">
+      <h3 class="text-md font-semibold mb-2">Новые изображения:</h3>
+      <div class="flex flex-wrap gap-2">
+        <div *ngFor="let image of selectedNewImages; let i = index" class="relative">
+          <img [src]="image | imageUrl" class="w-20 h-20 object-cover rounded">
+          <button (click)="removeNewImage(i)" class="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1">
+            ✖
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Кнопки -->
+    <div class="flex justify-end gap-2 mt-4">
+      <button (click)="closeEditModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-red-600 hover:text-white transition">
+        Отмена
+      </button>
+      <button (click)="submitEditNews()" class="px-4 py-2 bg-primary text-white rounded hover:bg-blue-900 transition">
+        Сохранить
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Модальное окно -->
+<div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+    <h2 class="text-lg font-bold mb-4">Добавить новость</h2>
+
+    <!-- Поле заголовка -->
+    <input type="text" class="w-full border p-2 mb-4" placeholder="Заголовок" [(ngModel)]="newNews.title">
+
+    <!-- Поле текста -->
+    <textarea class="w-full border p-2 mb-4" placeholder="Текст новости" rows="4" [(ngModel)]="newNews.content"></textarea>
+
+    <!-- Поле для загрузки изображений (до 3) -->
+    <label class="block mt-4">
+      <span class="text-gray-700 font-medium">Изображения (максимум 3)</span>
+      <div class="relative inline-block">
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" class="hidden" id="fileInput">
+        <label for="fileInput" class="cursor-pointer flex items-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg shadow-md">
+          <i class="fas fa-paperclip"></i> Выберите файл
+        </label>
+      </div>
+    </label>
+
+    <!-- Превью загруженных файлов -->
+    <div class="mt-4 flex gap-2">
+      <div *ngFor="let file of newNews.images; let i = index" class="relative">
+        <p class="text-sm">{{ file.name }}</p>
+        <button (click)="removeImage(i)" class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center">✕</button>
+      </div>
+    </div>
+
+    <!-- Кнопки -->
+    <div class="flex justify-end gap-2 mt-4">
+      <button (click)="closeModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-red-600 hover:text-white transition">Отмена</button>
+      <button (click)="submitNews()" class="px-4 py-2 bg-primary text-white rounded hover:bg-blue-900 transition">Опубликовать</button>
+    </div>
+  </div>
+</div>

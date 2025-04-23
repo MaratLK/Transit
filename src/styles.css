@@ -1,1 +1,36 @@
 /* You can add global styles to this file, and also import other style files */
+@import 'swiper/swiper-bundle.css';
+
+@tailwind base;       /* Базовые стили (например, сброс стандартных стилей браузера) */
+@tailwind components; /* Готовые компоненты Tailwind (например, кнопки, карточки) */
+@tailwind utilities;  /* Утилитарные классы (например, `text-blue-500`, `p-4`) */
+
+@layer components {
+    .animate-fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+    
+    .fade-in-active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .service-card {
+    @apply bg-white p-6 rounded-lg shadow-md transition transform hover:-translate-y-1 hover:shadow-xl;
+  }
+  
+  .service-icon {
+    @apply flex items-center justify-center w-14 h-14 rounded-full text-white text-2xl mx-auto mb-4;
+  }
+  
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  overflow-x: hidden;
+}

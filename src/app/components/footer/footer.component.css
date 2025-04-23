@@ -1,0 +1,8 @@
+.moving-car img {
+    position: absolute;
+    bottom: -100px; /* Опускаем вниз */
+    left: -100px; /* Старт за левым краем */
+    transform: scaleX(1); /* Изменение направления */
+    animation: moveCar 10s linear infinite;
+  }
+  

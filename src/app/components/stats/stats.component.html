@@ -1,0 +1,19 @@
+<section class="relative bg-primary py-16">
+    <div class="container mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
+        <div *ngFor="let stat of stats"
+            class="bg-white shadow-lg p-8 rounded-xl text-center w-full max-w-[280px] min-h-[220px] flex flex-col items-center border border-gray-300 hover:shadow-2xl transition duration-300">
+            
+            <!-- Иконка -->
+            <i [class]="stat.icon" class="text-5xl mb-3 text-[#1a2b4c]"></i>
+            
+            <!-- Число -->
+            <div class="stat-number text-5xl font-extrabold text-gray-900" [attr.data-target]="stat.target">0</div>
+            
+            <!-- Линия-декор -->
+            <div class="w-16 h-1 bg-blue-600 mx-auto my-4 rounded-full"></div>
+            
+            <!-- Описание -->
+            <p class="text-lg text-gray-700 font-medium">{{ stat.text }}</p>
+        </div>
+    </div>
+</section>

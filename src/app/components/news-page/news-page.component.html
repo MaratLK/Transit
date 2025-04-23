@@ -1,0 +1,56 @@
+  <section class="flex flex-col min-h-screen relative bg-gray-50 text-gray-900">
+    <!-- Фиксированная верхняя панель с логотипом и кнопкой назад -->
+    <header class="absolute top-6 left-6 flex flex-col items-start gap-2">
+      <img src="/assets/img_prj/RealLogo.png" alt="Логотип" class="h-20"> <!-- Логотип -->
+      <button (click)="goBack()" class="text-gray-600 hover:text-gray-900 transition">
+        <i class="fas fa-arrow-left text-3xl"></i> <!-- Кнопка назад -->
+      </button>
+    </header>
+
+    <!-- Контент новости -->
+    <div class="flex-1 p-6 max-w-3xl mx-auto text-center">
+      <div *ngIf="!isLoading && !errorMessage; else loadingOrError">
+        <!-- Заголовок -->
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">
+          {{ news.title || 'Без заголовка' }}
+        </h1>
+        <p class="text-gray-500 text-sm italic">
+          {{ news.datePublished | date: 'longDate' }}
+        </p>
+        
+        
+        <div *ngIf="news?.newsImages && news.newsImages.length > 0" class="mt-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Фотографии -->
+            <div *ngFor="let img of news.newsImages; trackBy: trackByIndex" class="relative">
+              <img [src]="img?.imageUrl || '/assets/default-placeholder.webp'"
+                   alt="Новостное изображение"
+                   class="w-full h-56 object-cover rounded-lg shadow-md hover:scale-105 transition cursor-pointer"
+                   (click)="openModal(img?.imageUrl || '')"
+                   (error)="onImageError($event)">
+            </div>
+          </div>
+        </div>        
+
+        <!-- Контент -->
+        <div class="mt-6 text-lg text-gray-800 leading-relaxed border-l-4 border-gray-300 pl-4 text-left">
+          {{ news.content || 'Нет содержимого' }}
+        </div>        
+      </div>
+    </div>
+
+    <!-- Модальное окно для увеличенного изображения -->
+    <div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50" (click)="closeModal()">
+      <img [src]="selectedImageUrl" alt="Увеличенное изображение" class="max-w-4xl max-h-96 object-contain" (click)="$event.stopPropagation()">
+      <button class="absolute top-4 right-4 text-white text-3xl font-bold" (click)="closeModal()">×</button>
+    </div>
+
+    <!-- Блок загрузки / ошибки -->
+    <ng-template #loadingOrError>
+      <div class="text-center text-gray-500 text-lg">
+        {{ isLoading ? 'Загружаем новость...' : errorMessage }}
+      </div>
+    </ng-template>
+
+
+  </section>
