@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist/transit/server",
+    "target": "es2020",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/server.ts"],
+"exclude": [
+  "src/main.server.ts",
+  "src/app",
+  "src/**/*.spec.ts"
+]
+}

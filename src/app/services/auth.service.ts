@@ -1,72 +1,110 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, switchMap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:5169/api/Users';
-  private tokenKey = 'auth-token';
-  private userKey = 'user-info';
+  private apiUrl    = 'https://localhost:5001/api/Users';
+  private tokenKey  = 'auth-token';
+  private userKey   = 'user-info';
+  private userSubject = new BehaviorSubject<any|null>(this.getUserFromLocalStorage());
+  public  user$      = this.userSubject.asObservable();
 
-  private userSubject = new BehaviorSubject<any>(this.getUserFromLocalStorage());
-  user$ = this.userSubject.asObservable();
-
-  constructor(private http: HttpClient, @Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
     if (isPlatformBrowser(this.platformId)) {
-      this.updateUser(); // Гарантируем обновление пользователя при загрузке
+      this.updateUser();
     }
   }
 
-  private getUserFromLocalStorage(): any {
-    if (isPlatformBrowser(this.platformId)) {
-      const user = localStorage.getItem(this.userKey);
-      console.log("📦 Данные из localStorage:", user);
-      return user ? JSON.parse(user) : {}; // Возвращаем пустой объект вместо null
-    }
-    return {}; // В случае SSR (если мы на сервере)
+  private getUserFromLocalStorage(): any|null {
+    if (!isPlatformBrowser(this.platformId)) return null;
+    const j = localStorage.getItem(this.userKey);
+    return j ? JSON.parse(j) : null;
   }
 
-  updateUser() {
-    if (isPlatformBrowser(this.platformId)) {
-      const user = this.getUserFromLocalStorage();
-      console.log("🔄 Обновляем пользователя в сервисе:", user);
-      this.userSubject.next(user || {}); // Гарантируем обновление
-    }
+  public updateUser() {
+    this.userSubject.next(this.getUserFromLocalStorage());
   }
 
+  /** 
+   * Декодирует base64url (JWT payload) в строку.
+   * Заменяет URL-безопасные символы, добавляет padding и вызывает atob.
+   */
+  private decodeBase64Url(str: string): string {
+    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = base64.length % 4;
+    if (pad === 2) base64 += '==';
+    else if (pad === 3) base64 += '=';
+    else if (pad !== 0) throw new Error('Invalid base64url string');
+    return atob(base64);
+  }
+
+  /**
+   * Извлекает роль пользователя из payload JWT.
+   */
   getUserRole(): string {
-    if (!isPlatformBrowser(this.platformId)) {
-      return ""; // Если не в браузере, возвращаем пустую строку
+    const token = this.getToken() || '';
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      console.warn('❌ Невалидный формат токена:', token);
+      return '';
     }
-
-    const token = localStorage.getItem(this.tokenKey);
-    if (!token) return "";
-
     try {
-      const tokenPayload = JSON.parse(atob(token.split(".")[1])); // Декодируем JWT
-      console.log("🔍 Декодированный токен:", tokenPayload);
-      return tokenPayload["role"] || ""; // Проверяем ключ, возможно, он у тебя называется по-другому
-    } catch (error) {
-      console.error("❌ Ошибка при декодировании токена:", error);
-      return "";
+      const decoded = this.decodeBase64Url(parts[1]);
+      const payload = JSON.parse(decoded);
+      return payload['role'] || '';
+    } catch (e) {
+      console.error('❌ Ошибка при декодировании токена:', e);
+      return '';
     }
   }
 
-  login(credentials: { email: string; password: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
-      tap((response: any) => {
-        if (isPlatformBrowser(this.platformId) && response.token) {
-          localStorage.setItem(this.tokenKey, response.token);
-          localStorage.setItem(this.userKey, JSON.stringify(response.user));
-          console.log("✅ Сохранен пользователь в localStorage:", response.user);
-          this.updateUser();
-        }
-      })
-    );
+  private saveToken(token: string) {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(this.tokenKey, token);
+    }
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = isPlatformBrowser(this.platformId)
+      ? localStorage.getItem(this.tokenKey)
+      : null;
+    return new HttpHeaders({
+      Authorization: token ? `Bearer ${token}` : ''
+    });
+  }
+
+  /**
+   * Логин: получает token и user, сохраняет их, а затем подгружает полный профиль.
+   */
+  login(creds: { email: string; password: string }): Observable<any> {
+    return this.http
+      .post<{ token: string; user: any }>(`${this.apiUrl}/login`, creds)
+      .pipe(
+        tap(r => {
+          if (r.token) {
+            this.saveToken(r.token);
+            localStorage.setItem(this.userKey, JSON.stringify(r.user));
+            this.userSubject.next(r.user);
+          } else {
+            console.error('❌ В ответе /login отсутствует поле token:', r);
+          }
+        }),
+        switchMap(() =>
+          this.http.get<any>(`${this.apiUrl}/profile`, {
+            headers: this.getAuthHeaders()
+          })
+        ),
+        tap(profile => {
+          localStorage.setItem(this.userKey, JSON.stringify(profile));
+          this.userSubject.next(profile);
+        })
+      );
   }
 
   logout(): void {
@@ -85,18 +123,15 @@ export class AuthService {
     return null;
   }
 
-  getUser(): any {
-    return this.getUserFromLocalStorage();
-  }
-
   isLoggedIn(): boolean {
-    if (isPlatformBrowser(this.platformId)) {
-      return !!localStorage.getItem(this.tokenKey);
-    }
-    return false;
+    return !!this.getToken();
+  }
+  
+  getUser(): any|null {
+    return this.userSubject.value;
   }
 
   isAdmin(): boolean {
-    return this.getUserRole() === "Admin";
+    return this.getUserRole() === 'Admin';
   }
 }

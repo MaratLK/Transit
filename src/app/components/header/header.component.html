@@ -1,28 +1,70 @@
-<header class="fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] h-[85px] flex items-center justify-between px-6 rounded-[30px] z-50"
-        style="background: linear-gradient(115deg, #ffffff 30%, #1a2b4c 30%);">
-  
+<header
+  class="fixed top-5 left-1/2 transform -translate-x-1/2
+         w-[90%] h-[85px]
+         flex items-center justify-between
+         px-6
+         rounded-[30px]
+         z-50"
+  style="background: linear-gradient(115deg, #ffffff 30%, #1a2b4c 30%);"
+>
   <!-- Логотип -->
-  <div class="logo">
-    <a href="#slides">
-      <img src="/assets/img_prj/RealLogo.png" alt="Логотип ПЛК Транзит"
-           class="h-20 w-auto cursor-pointer">
+  <div class="flex-shrink-0">
+    <a routerLink="/" fragment="slides" class="block h-full flex items-center">
+      <img
+        src="/assets/img_prj/RealLogo.png"
+        alt="Логотип ПЛК Транзит"
+        class="h-20 w-auto cursor-pointer"
+      />
     </a>
   </div>
-  
 
-  <!-- Навигация -->
-  <nav>
-    <ul class="flex space-x-6 text-white font-exo">
-      <li><a href="#services" class="p-3 rounded-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-20">Услуги</a></li>
-      <li><a href="#about" class="p-3 rounded-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-20">О нас</a></li>
-      <li><a href="#news" class="p-3 rounded-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-20">Новости</a></li>
-      <li><a href="#contacts" class="p-3 rounded-lg flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-20">Контакты</a></li>
+  <!-- Бургер: видно вплоть до <lg (1024px) -->
+  <button
+    class="block lg:hidden text-white text-2xl"
+    (click)="menuOpen = !menuOpen"
+    aria-label="Toggle menu"
+  >
+    <i class="fas" [ngClass]="menuOpen ? 'fa-times' : 'fa-bars'"></i>
+  </button>
+
+  <!-- Десктоп-меню: скрыто на <lg, видно на ≥lg -->
+  <nav class="hidden lg:flex h-full">
+    <ul class="flex h-full items-center lg:space-x-5 space-x-6 text-white font-exo">
+      <li><a routerLink="/" fragment="services" class="h-full flex items-center px-3 lg:px-2 hover:bg-white/20 rounded-lg">Услуги</a></li>
+      <li><a routerLink="/" fragment="about"    class="h-full flex items-center px-3 lg:px-2 hover:bg-white/20 rounded-lg">О нас</a></li>
+      <li><a routerLink="/" fragment="news"     class="h-full flex items-center px-3 lg:px-2 hover:bg-white/20 rounded-lg">Новости</a></li>
+      <li><a routerLink="/" fragment="contacts" class="h-full flex items-center px-3 lg:px-2 hover:bg-white/20 rounded-lg">Контакты</a></li>
       <li>
-        <a (click)="navigateToAuth()" class="p-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-300 hover:bg-white hover:bg-opacity-20">
-          <i class="fas fa-user"></i> {{ isLoggedIn ? userName : 'Войти' }}
-        </a>
-      </li>      
+        <button (click)="openMyRequests()"
+                class="h-full flex items-center px-4 bg-primary hover:bg-primary/90 text-white rounded-lg">
+          {{ isAdmin ? 'Все заявки' : 'Мои заявки' }}
+        </button>
+      </li>
+      <li>
+        <button (click)="navigateToAuth()"
+                class="h-full flex items-center gap-2 px-3 hover:bg-white/20 rounded-lg text-white">
+          <i class="fas fa-user"></i>{{ isLoggedIn ? userName : 'Войти' }}
+        </button>
+      </li>
     </ul>
   </nav>
 
+  <!-- Мобильное дропдаун-меню: видно только на <lg -->
+  <div
+    *ngIf="menuOpen"
+    class="absolute top-full left-1/2 transform -translate-x-1/2
+           w-[90%] bg-white rounded-lg shadow-lg
+           flex flex-col space-y-2 p-4 lg:hidden z-40"
+  >
+    <a routerLink="/" fragment="services" class="py-2 px-3 hover:bg-gray-100 rounded">Услуги</a>
+    <a routerLink="/" fragment="about"    class="py-2 px-3 hover:bg-gray-100 rounded">О нас</a>
+    <a routerLink="/" fragment="news"     class="py-2 px-3 hover:bg-gray-100 rounded">Новости</a>
+    <a routerLink="/" fragment="contacts" class="py-2 px-3 hover:bg-gray-100 rounded">Контакты</a>
+    <button (click)="openMyRequests()" class="w-full text-left py-2 px-3 hover:bg-gray-100 rounded">
+      {{ isAdmin ? 'Все заявки' : 'Мои заявки' }}
+    </button>
+    <button (click)="navigateToAuth()" class="w-full text-left py-2 px-3 hover:bg-gray-100 rounded flex items-center gap-2">
+      <i class="fas fa-user"></i>{{ isLoggedIn ? userName : 'Войти' }}
+    </button>
+  </div>
 </header>

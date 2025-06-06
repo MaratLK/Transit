@@ -1,0 +1,98 @@
+<!-- src/app/components/my-requests-modal/my-requests-modal.component.html -->
+<div class="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+  <div class="bg-white w-full max-w-lg max-h-[80vh] overflow-auto rounded-lg p-6 shadow-lg">
+    <h2 class="text-2xl font-semibold mb-4">
+      {{ isAdmin ? 'Все заявки' : 'Мои заявки' }}
+    </h2>
+
+    <div *ngIf="loading" class="text-center py-10">Загрузка…</div>
+    <div *ngIf="error" class="text-red-500 mb-4">{{ error }}</div>
+
+    <ul *ngIf="!loading && !error" class="space-y-4">
+      <li *ngFor="let r of requests" class="border p-4 rounded">
+        <!-- Шапка: номер и дата -->
+        <div class="flex justify-between text-sm text-gray-500 mb-2">
+          <span>№{{ r.id }}</span>
+          <span>{{ r.createdAt! | date:'shortDate' }}</span>
+        </div>
+
+        <!-- Телефон -->
+        <div class="text-sm text-gray-700 mb-2">
+          Телефон:
+          <a [href]="'tel:' + r.phoneNumber" class="underline">
+            {{ r.phoneNumber }}
+          </a>
+        </div>
+
+        <!-- Комментарий -->
+        <div *ngIf="!isAdmin" class="font-medium mb-2">
+          {{ r.comment?.length! > 30
+             ? (r.comment?.slice(0,30) + '…')
+             : r.comment }}
+        </div>
+        <div *ngIf="isAdmin" class="mb-2">
+          <textarea
+            [(ngModel)]="r.comment"
+            rows="2"
+            class="w-full border rounded p-1 focus:ring"
+          ></textarea>
+        </div>
+
+        <!-- Статус и действия -->
+        <div class="flex items-center justify-between">
+          <!-- Статус -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs">Статус:</span>
+
+            <!-- обычный пользователь видит текст -->
+            <ng-container *ngIf="!isAdmin">
+              <span [ngClass]="{
+                'text-yellow-600': r.status === 0,
+                'text-green-600':  r.status === 1,
+                'text-red-600':    r.status === 2
+              }">
+                {{ ['В ожидании','Одобрено','Отклонено'][r.status!] }}
+              </span>
+            </ng-container>
+
+            <!-- админ может менять через select -->
+            <ng-container *ngIf="isAdmin">
+              <select
+                [(ngModel)]="r.status"
+                class="border rounded px-1 py-0.5"
+              >
+                <option [value]="0">В ожидании</option>
+                <option [value]="1">Одобрено</option>
+                <option [value]="2">Отклонено</option>
+              </select>
+            </ng-container>
+          </div>
+
+          <!-- Кнопки действий -->
+          <div class="flex space-x-2">
+            <button
+              *ngIf="isAdmin"
+              (click)="saveChanges(r)"
+              class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
+            >
+              Сохранить
+            </button>
+            <button
+              (click)="deleteRequest(r.id!)"
+              class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+            >
+              Удалить
+            </button>
+          </div>
+        </div>
+      </li>
+    </ul>
+
+    <button
+      (click)="onClose()"
+      class="mt-4 w-full bg-gray-200 text-gray-700 py-2 rounded hover:bg-gray-300"
+    >
+      Закрыть
+    </button>
+  </div>
+</div>

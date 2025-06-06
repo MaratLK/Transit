@@ -35,15 +35,14 @@ export class NewsPageComponent implements OnInit {
   news: NewsItem = { newsID: 0, title: '', content: '', datePublished: '', newsImages: [] };
   isLoading = true;
   errorMessage: string | null = null;
-  private apiUrl = "http://localhost:5169/api/News";
-  private baseUrl = "http://localhost:5169"; // Базовый URL для изображений
+  private apiUrl = "https://localhost:5001/api/News";
+private baseUrl = "https://localhost:5001";
   isModalOpen = false;
   selectedImageUrl = '';
 
   constructor(private route: ActivatedRoute, private http: HttpClient, private router: Router, @Inject(LOCALE_ID) public locale: string) {}
 
   openModal(imageUrl: string) {
-    // Добавим проверку на пустое значение, если imageUrl пустое, не открываем модал
     if (imageUrl) {
       this.selectedImageUrl = imageUrl;
       this.isModalOpen = true;

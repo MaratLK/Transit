@@ -8,20 +8,16 @@ import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ImageUrlPipe } from '../../pipes/imageUrl.pipe';
-import { OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
 import { DatePipe } from '@angular/common';
-import { formatDistanceToNow } from 'date-fns';
-import { formatDistanceToNowStrict } from 'date-fns'; // Импортируем новую функцию
+import { formatDistanceToNowStrict } from 'date-fns'; 
 
 
 interface NewsItem {
   newsID: number;
   title: string;
   content: string;
-  datePublished: string;  // Для отображения
-  originalDate: Date;     // Для сортировки
+  datePublished: string;  
+  originalDate: Date;     
   newsImages?: { imageUrl: string }[];
 }
 
@@ -30,7 +26,7 @@ interface NewsItem {
   standalone: true,
   templateUrl: './news.component.html',
   styleUrls: ['./news.component.css'],
-  imports: [CommonModule, FormsModule, ImageUrlPipe, DatePipe]
+  imports: [CommonModule, FormsModule, ImageUrlPipe]
 })
 
 export class NewsComponent {
@@ -41,36 +37,37 @@ export class NewsComponent {
     width: "0px",
     top: "0px",
     opacity: "0",
-    transform: "translateY(10px) scaleY(0.5)" // ✅ По умолчанию скрыта
+    transform: "translateY(10px) scaleY(0.5)"
   };
 
-  editingNewsImages: { imageUrl: string }[] = []; // Храним старые изображения
-  selectedNewImages: File[] = []; // Храним новые изображения
+  editingNewsImages: { imageUrl: string }[] = []; 
+  selectedNewImages: File[] = []; 
   errorMessage: string | null = null;
-  isEditModalOpen = false; // Открыто ли модальное окно
+  isEditModalOpen = false; 
   editingNews: { newsID: number; title: string; content: string; datePublished: string } = { 
     newsID: 0, 
     title: '', 
     content: '', 
-    datePublished: new Date().toISOString() // ✅ Добавляем datePublished
+    datePublished: new Date().toISOString() 
   };
   
   
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService, // ✅ Добавляем AuthService в конструктор
+    private authService: AuthService, 
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
   
 
-  private apiUrl = "http://localhost:5169/api/News";
+  private baseUrl = 'https://localhost:5001';
+  private newsEndpoint = `${this.baseUrl}/api/News`;
+  
   newsList: NewsItem[] = [];
   isModalOpen = false;
   newNews: { title: string; content: string; images: File[] } = { title: '', content: '', images: [] };
 
-  // ✅ Группируем новости по 3 без лишних проверок
   get groupedNews() {
     const rows: NewsItem[][] = [];
     for (let i = 0; i < this.newsList.length; i += 3) {
@@ -80,7 +77,7 @@ export class NewsComponent {
   }
 
   goToNewsPage(newsID: number) {
-    console.log("Переход на новость с ID:", newsID); // ✅ Логируем
+    console.log("Переход на новость с ID:", newsID); 
     this.router.navigate(['/news', newsID]);
   }
   
@@ -94,8 +91,8 @@ export class NewsComponent {
         this.floatingLineStyle = {
           left: `${element.offsetLeft}px`,
           width: `${element.offsetWidth}px`,
-          top: `${element.offsetTop + element.offsetHeight}px`, // ✅ Теперь линия под карточкой
-          transform: "translateY(0) scaleY(1)", // ✅ Плавное появление
+          top: `${element.offsetTop + element.offsetHeight}px`, 
+          transform: "translateY(0) scaleY(1)", 
           opacity: "1"
         };
       });
@@ -105,7 +102,7 @@ export class NewsComponent {
   hideFloatingLine() {
     this.floatingLineStyle = {
       ...this.floatingLineStyle,
-      transform: "translateY(10px) scaleY(0.5)", // ✅ Анимация исчезновения
+      transform: "translateY(10px) scaleY(0.5)",
       opacity: "0"
     };
   }
@@ -114,13 +111,11 @@ export class NewsComponent {
     this.isModalOpen = true;
   }
 
-  /** Закрытие модального окна */
   closeModal() {
     this.isModalOpen = false;
     this.newNews = { title: '', content: '', images: [] };
   }
 
-  /** Обработка загруженных файлов (изображений) */
   onFileSelected(event: any) {
     if (this.newNews.images.length >= 3) {
       alert("Можно загрузить не более 3 изображений.");
@@ -133,12 +128,10 @@ export class NewsComponent {
     }
   }
 
-  /** Удаление выбранного изображения */
   removeImage(index: number) {
     this.newNews.images.splice(index, 1);
   }
 
-  /** Формирование заголовков с авторизацией */
   private getAuthHeaders(): HttpHeaders {
     if (isPlatformBrowser(this.platformId)) {
       const token = localStorage.getItem("auth-token");
@@ -154,22 +147,21 @@ export class NewsComponent {
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return 'Дата недоступна';  // Возвращаем дефолтное значение
+      return 'Дата недоступна';  
     }
     
     const now = new Date();
     const diffInMillis = now.getTime() - date.getTime();
     
-    // Если прошло меньше 24 часов
-    if (diffInMillis < 86400000) {  // 86400000 - это 24 часа в миллисекундах
-      return formatDistanceToNowStrict(date, { addSuffix: true }); // Точное отображение времени
+    if (diffInMillis < 86400000) {  
+      return formatDistanceToNowStrict(date, { addSuffix: true }); 
     } else {
-      return date.toLocaleDateString("ru-RU");  // Возвращаем дату в формате "дд.мм.гггг"
+      return date.toLocaleDateString("ru-RU");
     }
   }
   
   loadNews() {
-    this.http.get<any>(`${this.apiUrl}`, { headers: this.getAuthHeaders() }).pipe(
+    this.http.get<any>(this.newsEndpoint, { headers: this.getAuthHeaders() }).pipe(
       catchError(error => {
         console.error("Ошибка при загрузке новостей:", error);
         this.errorMessage = "Ошибка при загрузке новостей!";
@@ -178,33 +170,28 @@ export class NewsComponent {
     ).subscribe((response) => {
       console.log("Ответ API:", response);
   
-      // Приводим к массиву, если данные приходят в $values
       const newsArray: any[] = response?.$values && Array.isArray(response.$values)
         ? response.$values
         : (Array.isArray(response) ? response : []);
   
-      // Обрабатываем новости и изображения
       this.newsList = newsArray.map((n: any) => {
-        const originalDate = new Date(n.datePublished); // Сохраняем оригинальную дату
-        const formattedDate = this.formatDate(n.datePublished); // Форматируем только для отображения
+        const originalDate = new Date(n.datePublished); 
+        const formattedDate = this.formatDate(n.datePublished); 
       
         return {
           newsID: n.newsID,
           title: n.title,
           content: n.content,
-          datePublished: formattedDate,  // Отображаем форматированную дату
-          originalDate: originalDate,   // Сохраняем для сортировки
+          datePublished: formattedDate,  
+          originalDate: originalDate,  
           newsImages: Array.isArray(n.newsImages) 
             ? n.newsImages.map((img: any) => ({ imageUrl: img.imageUrl })) 
             : (n.newsImages?.$values ? n.newsImages.$values.map((img: any) => ({ imageUrl: img.imageUrl })) : [])
         };
       });
-      
-  
-      // Сортируем новости по дате от самой новой до самой старой
-      this.newsList = this.newsList.sort((a, b) => b.originalDate.getTime() - a.originalDate.getTime()); // Сортировка по времени
-  
-      // Ограничиваем количество новостей до 9
+    
+      this.newsList = this.newsList.sort((a, b) => b.originalDate.getTime() - a.originalDate.getTime()); 
+
       this.newsList = this.newsList.slice(0, 9);
   
       console.log("Загруженные новости:", this.newsList);
@@ -230,7 +217,7 @@ export class NewsComponent {
       Authorization: `Bearer ${localStorage.getItem("auth-token") || ''}`
     });
   
-    this.http.post(`${this.apiUrl}`, formData, { headers }).pipe(
+    this.http.post(this.newsEndpoint, formData, { headers }).pipe(
       catchError(error => {
         console.error("Ошибка при добавлении новости:", error);
         return throwError(() => new Error("Ошибка при добавлении новости! Возможно, недостаточно прав."));
@@ -238,9 +225,7 @@ export class NewsComponent {
     ).subscribe(
       (response: any) => {
         console.log("Новость добавлена:", response);
-  
-        // Добавляем новость в начало списка
-        const originalDate = new Date();  // Добавляем оригинальную дату (текущее время)
+        const originalDate = new Date(); 
         this.newsList.unshift({
           newsID: response.newsID,
           title: this.newNews.title,
@@ -250,26 +235,23 @@ export class NewsComponent {
             : response.newsImages?.$values 
               ? response.newsImages.$values.map((img: any) => ({ imageUrl: img.imageUrl })) 
               : [],
-          datePublished: new Date().toLocaleDateString("ru-RU"),  // Отображаем дату в нужном формате
-          originalDate: originalDate  // Сохраняем оригинальную дату для сортировки
+          datePublished: new Date().toLocaleDateString("ru-RU"), 
+          originalDate: originalDate 
         });
   
-        // Перезагружаем новости
         this.loadNews();
   
-        // Закрываем модальное окно
         this.closeModal();
       }
     );
   }  
 
-  /** Удаление новости */
   deleteNews(newsID: number) {
     if (!confirm("Вы уверены, что хотите удалить эту новость?")) {
       return;
     }
 
-    this.http.delete(`${this.apiUrl}/${newsID}`, { headers: this.getAuthHeaders() }).pipe(
+    this.http.delete(`${this.newsEndpoint}/${newsID}`, { headers: this.getAuthHeaders() }).pipe(
       catchError(error => {
         console.error("Ошибка при удалении новости:", error);
         return throwError(() => new Error("Ошибка при удалении новости!"));
@@ -282,7 +264,13 @@ export class NewsComponent {
     );
   }
 
-  updateNews(newsID: number, updatedTitle: string, updatedContent: string, selectedImages: FileList | null, existingImages: string[]) {
+  updateNews(
+    newsID: number,
+    updatedTitle: string,
+    updatedContent: string,
+    selectedImages: FileList | null,
+    existingImages: string[]
+  ) {
     const token = this.authService.getToken();
     if (!token) {
       console.error("❌ Ошибка: Токен отсутствует, невозможно выполнить запрос!");
@@ -294,22 +282,20 @@ export class NewsComponent {
     formData.append("content", updatedContent);
     formData.append("datePublished", new Date().toISOString());
   
-    // 🔹 Передаем ссылки на старые изображения
     existingImages.forEach(img => {
       formData.append("ExistingImages", img);
     });
   
-    // 🔹 Загружаем новые файлы
-    if (selectedImages) {
+    if (selectedImages !== null && selectedImages !== undefined && selectedImages.length > 0) {
       for (let i = 0; i < selectedImages.length; i++) {
         formData.append("Images", selectedImages[i]);
       }
     }
   
-    console.log("🔄 Отправляем данные:", formData);
+    console.log("🔄 Отправляем данные (обновление):", formData);
   
-    this.http.put(`${this.apiUrl}/${newsID}`, formData, { 
-      headers: this.getAuthHeadersWithoutJson() // ❗ Не указываем Content-Type!
+    this.http.put(`${this.newsEndpoint}/${newsID}`, formData, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
     }).pipe(
       catchError(error => {
         console.error("❌ Ошибка при обновлении новости:", error);
@@ -317,10 +303,9 @@ export class NewsComponent {
       })
     ).subscribe(() => {
       console.log("✅ Новость обновлена:", newsID);
-      this.loadNews(); // 🔄 Обновляем список новостей
+      this.loadNews();
     });
-  }
-  
+  }  
 
   getAuthHeadersWithoutJson(): HttpHeaders {
     const token = this.authService.getToken();
@@ -329,12 +314,19 @@ export class NewsComponent {
     }
   
     return new HttpHeaders({
-      Authorization: `Bearer ${token}` // ❗ Без Content-Type, так как FormData сам его устанавливает!
+      Authorization: `Bearer ${token}`
     });
   }
+  
   submitEditNews() {
     if (!this.editingNews) {
       console.error("❌ Ошибка: Нет данных для редактирования!");
+      return;
+    }
+  
+    const token = this.authService.getToken();
+    if (!token) {
+      console.error("❌ Ошибка: Токен отсутствует!");
       return;
     }
   
@@ -343,13 +335,11 @@ export class NewsComponent {
     formData.append("content", this.editingNews.content);
     formData.append("datePublished", this.editingNews.datePublished);
   
-    // 🔹 Добавляем ссылки на существующие изображения
     this.editingNewsImages.forEach(img => {
       formData.append("ExistingImages", img.imageUrl);
     });
   
-    // 🔹 Загружаем новые файлы (если есть)
-    if (this.selectedNewImages && this.selectedNewImages.length > 0) {
+    if (this.selectedNewImages?.length > 0) {
       this.selectedNewImages.forEach(file => {
         formData.append("Images", file);
       });
@@ -357,8 +347,8 @@ export class NewsComponent {
   
     console.log("🔄 Отправляем данные (редактирование):", formData);
   
-    this.http.put(`${this.apiUrl}/${this.editingNews.newsID}`, formData, { 
-      headers: this.getAuthHeadersWithoutJson() 
+    this.http.put(`${this.newsEndpoint}/${this.editingNews.newsID}`, formData, {
+      headers: new HttpHeaders({ Authorization: `Bearer ${token}` })
     }).pipe(
       catchError(error => {
         console.error("❌ Ошибка при обновлении новости:", error);
@@ -370,27 +360,24 @@ export class NewsComponent {
       this.loadNews();
     });
   }
-  
+    
 
   openEditModal(news: NewsItem) {
     this.editingNews = { 
       newsID: news.newsID, 
       title: news.title, 
       content: news.content, 
-      datePublished: news.datePublished // ✅ Добавляем дату публикации
+      datePublished: news.datePublished 
     };
   
-    this.editingNewsImages = news.newsImages ? [...news.newsImages] : []; // Копируем изображения
+    this.editingNewsImages = news.newsImages ? [...news.newsImages] : []; 
     this.isEditModalOpen = true;
   }
   
 
-/** Удаление старого изображения */
 removeExistingImage(index: number) {
   this.editingNewsImages.splice(index, 1);
 }
-
-/** Добавление новых изображений */
 onNewImageSelected(event: any) {
   if (this.selectedNewImages.length >= 3) {
     alert("Можно загрузить не более 3 новых изображений.");
@@ -403,21 +390,18 @@ onNewImageSelected(event: any) {
   }
 }
 
-/** Удаление нового изображения */
 removeNewImage(index: number) {
   this.selectedNewImages.splice(index, 1);
 }
 
-/** Закрывает модальное окно */
 closeEditModal() {
   this.isEditModalOpen = false;
 }
 
 checkAdminStatus() {
-  const userRole = this.authService.getUserRole(); // Получаем роль
-  this.isAdmin = userRole === "Admin"; // Если админ, то true
+  const userRole = this.authService.getUserRole(); 
+  this.isAdmin = userRole === "Admin"; 
 }
-    /** Инициализация */
     ngOnInit() {
       this.loadNews();
       this.checkAdminStatus();

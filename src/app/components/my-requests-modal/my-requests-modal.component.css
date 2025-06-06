@@ -1,0 +1,3 @@
+.truncate {
+    @apply overflow-hidden whitespace-nowrap overflow-ellipsis;
+  }

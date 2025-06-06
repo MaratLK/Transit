@@ -1,14 +1,17 @@
 <swiper-container id="slides" *ngIf="isBrowser"  autoplay="true" pagination="true" navigation="true" class="w-full h-screen">
   <swiper-slide *ngFor="let slide of slides" class="relative">
     <div class="relative w-full h-screen flex items-center text-left">
-      <!-- Затемнение -->
       <div class="absolute inset-0 bg-black opacity-50"></div>
-
-      <!-- Изображение -->
       <img [src]="'/assets/whatsimg/' + slide.image" class="w-full h-full object-cover" alt="Слайд">
-
-      <!-- Текст -->
-      <p class="font-exo absolute z-10 text-white text-[110px] font-medium max-w-3xl leading-tight text-left ml-24">
+      <p class="font-exo absolute z-10 
+      text-white text-[110px] 
+      font-medium lg:text-[100px] 
+      lg:ml-16 max-w-3xl 
+      leading-tight 
+      text-left 
+      ml-24 
+      md:text-[80px]
+      md:ml-7">
         <span [innerHTML]="slide.text"></span>
       </p>
     </div>

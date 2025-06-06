@@ -1,47 +1,60 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { isPlatformBrowser } from '@angular/common';
+import { Component, EventEmitter, Output, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Router } from '@angular/router';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-header',
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.css'],
   standalone: true,
-  imports: [RouterModule]
+  imports: [
+    CommonModule,
+    RouterModule
+  ],
+  templateUrl: './header.component.html',
+  styleUrls: ['./header.component.css']
 })
 export class HeaderComponent implements OnInit {
+  @Output() openRequests = new EventEmitter<void>();
+
   isLoggedIn = false;
   userName = '';
+  isAdmin    = false; 
+  public menuOpen = false;
 
-  constructor(private router: Router, private authService: AuthService, @Inject(PLATFORM_ID) private platformId: Object) {}
+
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
+
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
-      this.authService.updateUser();
-      this.authService.user$.subscribe((user: any) => {
-        console.log("🔄 Обновление в HeaderComponent:", user);
-        this.isLoggedIn = !!user && !!user.email;
-        this.userName = user?.firstName || user?.name || 'Войти';
-        console.log("isLoggedIn:", this.isLoggedIn, "userName:", this.userName);
+      this.authService.user$.subscribe(u => {
+        this.isLoggedIn = !!u?.email;
+        this.userName   = u?.firstName || '';
+        this.isAdmin    = this.authService.isAdmin();
       });
     }
   }
-  
+
+  /** Нажали «Мои заявки» */
+  openMyRequests() {
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/auth']);
+    } else {
+      this.openRequests.emit();
+    }
+  }
+
+  /** Войти/выйти */
   navigateToAuth() {
     if (this.isLoggedIn) {
-      console.log("🚪 Выход из учётной записи");
-      this.logout();
+      this.authService.logout();
+      this.router.navigate(['/auth']);
     } else {
-      console.log("🔑 Переход на страницу авторизации");
       this.router.navigate(['/auth']);
     }
   }
-  
-  logout() {
-    console.log("🚪 Выход пользователя");
-    this.authService.logout();
-    this.isLoggedIn = false; // ✅ Сразу сбрасываем состояние, чтобы кнопка мгновенно изменилась
-    this.router.navigate(['/auth']);
-  }
-  
 }

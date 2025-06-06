@@ -1,6 +1,6 @@
 import { Component, Inject, PLATFORM_ID, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { register } from 'swiper/element/bundle'; // ✅ Импортируем Swiper Web Components
+import { register } from 'swiper/element/bundle'; 
 
 @Component({
   selector: 'app-slider',
@@ -22,7 +22,7 @@ export class SliderComponent {
   constructor(@Inject(PLATFORM_ID) private platformId: object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
-      register(); // ✅ Регистрируем Swiper Web Components
+      register(); 
     }
   }
 }

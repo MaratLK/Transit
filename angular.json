@@ -13,8 +13,13 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/transit",
+            "outputPath": "dist/transit/browser",
             "index": "src/index.html",
+            "optimization": {
+              "fonts": {
+               "inline": false
+             }
+            },
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js",
@@ -34,13 +39,13 @@
             ],
             "scripts": [],
             "server": "src/main.server.ts",
-            "prerender": true,
             "ssr": {
               "entry": "src/server.ts"
             }
           },
           "configurations": {
             "production": {
+              "aot": true,
               "budgets": [
                 {
                   "type": "initial",
@@ -53,7 +58,12 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+            "optimization": {
+              "fonts": {
+                "inline": false
+              }
+            }
             },
             "development": {
               "optimization": false,
@@ -63,18 +73,35 @@
           },
           "defaultConfiguration": "production"
         },
+        "server": {
+         "builder": "@angular-devkit/build-angular:server",
+         "options": {
+           "outputPath": "dist/transit/server",
+           "main": "src/main.server.ts",
+           "tsConfig": "tsconfig.server.json",
+           "assets": [              
+      { "glob": "**/*", "input": "src/ssl", "output": "ssl" }
+    ]
+         },
+         "configurations": {
+           "production": {}
+         }
+       },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
-          "configurations": {
-            "production": {
-              "buildTarget": "Transit:build:production"
-            },
-            "development": {
-              "buildTarget": "Transit:build:development"
-            }
-          },
-          "defaultConfiguration": "development"
-        },
+  "builder": "@angular-devkit/build-angular:dev-server",
+  "configurations": {
+    "production": {
+      "buildTarget": "Transit:build:production"
+    },
+    "development": {
+      "buildTarget": "Transit:build:development",
+      "ssl": true,
+      "sslKey": "ssl/localhost.key",
+      "sslCert": "ssl/localhost.crt"
+    }
+  },
+  "defaultConfiguration": "development"
+},
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n"
         },

@@ -1,10 +1,18 @@
-<app-header *ngIf="!isAuthPage && !isNewsPage"></app-header>
+<app-header 
+  *ngIf="!isAuthPage && !isNewsPage"
+  (openRequests)="openMyRequests()">
+</app-header>
+
+<app-my-requests-modal
+  *ngIf="showMyRequests"
+  [isAdmin]="isAdmin"
+  (close)="closeMyRequests()">
+</app-my-requests-modal>
 
 <main>
-    <router-outlet></router-outlet>
+  <router-outlet></router-outlet>
 </main>
 
-<!-- ✅ Скрываем ненужные блоки, если открыта страница новости -->
 <ng-container *ngIf="!isAuthPage && !isNewsPage">
   <app-services></app-services>
   <app-about></app-about>
@@ -14,4 +22,3 @@
 </ng-container>
 
 <app-footer></app-footer>
-

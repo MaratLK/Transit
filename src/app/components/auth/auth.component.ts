@@ -1,20 +1,28 @@
 import { Component } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { NgForm, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
-
+import { NgxMaskDirective, provideNgxMask } from 'ngx-mask';
 
 @Component({
   selector: 'app-auth',
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css'],
   standalone: true,
-  imports: [FormsModule, RouterModule, CommonModule]
+  imports: [
+    CommonModule,
+    FormsModule,
+    NgxMaskDirective
+  ],
+  providers: [provideNgxMask()]
 })
 export class AuthComponent {
   isLogin = true;
+  message = '';
+  messageType: 'success' | 'error' = 'success';
+
   firstName = '';
   lastName = '';
   companyName = '';
@@ -23,62 +31,78 @@ export class AuthComponent {
   email = '';
   password = '';
 
-  private apiUrl = 'http://localhost:5169/api/Users';
+  private apiUrl = 'https://localhost:5001/api/Users';
 
-  constructor(private router: Router, private http: HttpClient, private authService: AuthService) {} // ✅ Добавляем сервис
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
   toggleForm() {
     this.isLogin = !this.isLogin;
+    this.message = '';
   }
 
-  onSubmit() {
-    if (this.isLogin) {
-      this.login();
-    } else {
-      this.register();
-    }
+  onSubmit(form: NgForm) {
+    if (!form.valid) return;
+    this.isLogin ? this.login() : this.register();
   }
 
-// auth.component.ts
-login() {
-  this.http.post(`${this.apiUrl}/login`, { email: this.email, password: this.password }).subscribe({
-    next: (response: any) => {
-      console.log('Успешный вход:', response);
-      localStorage.setItem('auth-token', response.token);
-      localStorage.setItem('user-info', JSON.stringify(response.user));
-      console.log("Проверка localStorage после сохранения:", localStorage.getItem('user-info')); // ✅ Лог для проверки
-      this.authService.updateUser();
-      this.router.navigate(['/']);
-    },
-    error: (error) => {
-      console.error('Ошибка входа:', error);
-    }
-  });
-}
+  private login() {
+    this.authService.login({ email: this.email, password: this.password })
+      .subscribe({
+        next: () => {
+          this.messageType = 'success';
+          this.message = 'Вход выполнен успешно';
+          setTimeout(() => this.router.navigate(['/']), 1500);
+        },
+        error: err => {
+          this.messageType = 'error';
+          this.message = 'Неверная почта или пароль';
+        }
+      });
+  }
 
-  register() {
+  private register() {
+    const rawPhone = this.phoneNumber.replace(/\D/g, '');
+  
     const userData = {
       firstName: this.firstName,
       lastName: this.lastName,
       companyName: this.companyName,
       address: this.address,
-      phoneNumber: this.phoneNumber,
+      phoneNumber: rawPhone,
       email: this.email,
       password: this.password
     };
-
-    this.http.post(`${this.apiUrl}/register`, userData).subscribe({
-      next: (response: any) => {
-        console.log('Успешная регистрация:', response);
-        localStorage.setItem('user', JSON.stringify(response));
-        this.authService.updateUser(); // ✅ Обновляем состояние пользователя
-        this.router.navigate(['/']);
-      },
-      error: (error) => {
-        console.error('Ошибка регистрации:', error);
-      }
-    });
-  }
+  
+    this.http.post(`${this.apiUrl}/register`, userData)
+      .subscribe({
+        next: (resp: any) => {
+          localStorage.setItem('user', JSON.stringify(resp));
+          this.authService.updateUser();
+          this.messageType = 'success';
+          this.message = 'Регистрация прошла успешно, войдите в аккаунт';
+          setTimeout(() => this.toggleForm(), 2000);
+        },
+        error: (err) => {
+          let msg = 'Ошибка регистрации, попробуйте позже';
+          if (err.error) {
+            if (err.error.errors) {
+              msg = Object.values(err.error.errors)
+                .flat()
+                .join(' ');
+            } else if (typeof err.error === 'string') {
+              msg = err.error;
+            }
+          }
+          this.messageType = 'error';
+          this.message = msg;
+          console.error('Registration error response:', err);
+        }
+      });
+  }  
 
   goBack() {
     this.router.navigate(['/']);
